@@ -72,7 +72,11 @@ export default async function HomePage() {
               <MetricCard
                 title="整体 ROI"
                 value={data.totals.roi.toFixed(2)}
-                subtitle={data.totals.roi >= 2 ? '表现良好' : '需要关注'}
+                subtitle={
+                  data.totals.gmvCny > 0
+                    ? `花费占比 ${((data.totals.spendCny / data.totals.gmvCny) * 100).toFixed(1)}%`
+                    : '暂无 GMV'
+                }
                 accent={
                   data.totals.roi >= 2
                     ? 'success'

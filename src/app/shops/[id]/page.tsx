@@ -90,6 +90,11 @@ export default async function ShopDetailPage({ params }: Props) {
               <MetricCard
                 title="ROI"
                 value={detail.shop.roi.toFixed(2)}
+                subtitle={
+                  detail.shop.gmvCny > 0
+                    ? `花费占比 ${((detail.shop.spendCny / detail.shop.gmvCny) * 100).toFixed(1)}%`
+                    : '暂无 GMV'
+                }
                 accent={
                   detail.shop.roi >= 2
                     ? 'success'
