@@ -123,6 +123,14 @@ xinyuan-ads/
 - Supabase ads schema 8 张表已创建并授权
 - GRANT 权限和 Exposed schemas/tables 已配置
 
+### ✅ Phase 2 · 任务 2.1(2026-04-10)
+
+- `scripts/seed-mock-data.ts` 已完成并成功运行
+- 生成数据:6 accounts / 37 campaigns / 93 ad_groups / 231 ads / 6930 daily_metrics / 180 exchange_rates
+- 支持 `--reset` 参数清空旧 mock 数据
+- Mock 账户用 `[MOCK]` 前缀 + `external_account_id` 以 `mock-` 开头区分真假数据
+- 数据符合业务感:ROI 1.5-4 区间,有涨有跌,10% 广告注入异常日供后续 Phase 3 异常检测测试
+
 **Phase 1 期间踩过的坑(已写入 001_ads_schema.sql 和代码)**:
 1. Supabase 新版 UI 需要在 Exposed schemas **和** Exposed tables 两处都勾选
 2. 创建 schema 后必须显式 `GRANT USAGE ON SCHEMA ads TO anon, authenticated, service_role`
