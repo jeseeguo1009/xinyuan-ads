@@ -1,33 +1,19 @@
-import { createServiceRoleClient } from '@/lib/supabase/server';
+import { getDashboardData, formatCny, formatNumber } from '@/lib/dashboard/queries';
+import { MetricCard } from '@/components/dashboard/metric-card';
+import { ShopMatrix } from '@/components/dashboard/shop-matrix';
+import { InsightPanel } from '@/components/dashboard/insight-panel';
 
-// 强制动态渲染,避免 Netlify 缓存错误响应
+// 强制动态渲染,每次访问都查最新数据
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-// 首页服务端渲染:拉取已连接的广告账户列表
 export default async function HomePage() {
-  let accounts: Array<{
-    id: string;
-    platform: string;
-    market: string;
-    account_name: string;
-    is_active: boolean;
-  }> = [];
+  let data;
   let loadError: string | null = null;
 
   try {
-    const supabase = createServiceRoleClient();
-    // 显式指定 schema('ads'),不依赖 client 的默认 schema 配置
-    const { data, error } = await supabase
-      .schema('ads')
-      .from('accounts')
-      .select('id, platform, market, account_name, is_active')
-      .order('created_at', { ascending: false });
-
-    if (error) throw error;
-    accounts = data ?? [];
+    data = await getDashboardData(7);
   } catch (err) {
-    // Supabase 返回的是 PostgrestError 对象,不是 Error 实例
     if (err instanceof Error) {
       loadError = err.message;
     } else if (err && typeof err === 'object') {
@@ -38,67 +24,83 @@ export default async function HomePage() {
   }
 
   return (
-    <main className="mx-auto max-w-4xl px-6 py-16">
-      <header className="mb-10">
-        <h1 className="text-3xl font-bold">欣远广告 Agent</h1>
-        <p className="mt-2 text-neutral-600">
-          TikTok Shop + Shopee 广告数据统一看板
-        </p>
+    <main className="mx-auto max-w-6xl px-6 py-10">
+      {/* Header */}
+      <header className="mb-8 flex items-end justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">欣远广告 Agent</h1>
+          <p className="mt-1 text-sm text-neutral-500">
+            TikTok Shop + Shopee 广告数据统一看板 · 最近 {data?.windowDays ?? 7} 天
+            {data && (
+              <span className="ml-2 text-neutral-400">
+                ({data.startDate} ~ {data.endDate})
+              </span>
+            )}
+          </p>
+        </div>
+        <a
+          href="/api/auth/tiktok/authorize"
+          className="rounded-lg bg-neutral-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-neutral-800"
+        >
+          + 连接 TikTok 店铺
+        </a>
       </header>
 
-      <section className="mb-10">
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-xl font-semibold">已连接店铺</h2>
-          <a
-            href="/api/auth/tiktok/authorize"
-            className="rounded-lg bg-black px-4 py-2 text-sm font-medium text-white hover:bg-neutral-800"
-          >
-            + 连接 TikTok 店铺
-          </a>
+      {/* 错误态 */}
+      {loadError && (
+        <div className="mb-6 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+          <div className="font-semibold">加载失败</div>
+          <div className="mt-1 font-mono text-xs">{loadError}</div>
         </div>
+      )}
 
-        {loadError && (
-          <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-            加载失败:{loadError}
-            <div className="mt-1 text-xs text-red-500">
-              检查 .env.local 是否配置了 Supabase 环境变量
+      {data && (
+        <>
+          {/* 顶部核心指标 */}
+          <section className="mb-8">
+            <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+              <MetricCard
+                title="总花费"
+                value={formatCny(data.totals.spendCny)}
+                subtitle="累计广告投入"
+              />
+              <MetricCard
+                title="总 GMV"
+                value={formatCny(data.totals.gmvCny)}
+                subtitle="累计销售额"
+              />
+              <MetricCard
+                title="整体 ROI"
+                value={data.totals.roi.toFixed(2)}
+                subtitle={data.totals.roi >= 2 ? '表现良好' : '需要关注'}
+                accent={
+                  data.totals.roi >= 2
+                    ? 'success'
+                    : data.totals.roi >= 1
+                      ? 'warning'
+                      : 'danger'
+                }
+              />
+              <MetricCard
+                title="总订单"
+                value={formatNumber(data.totals.orders)}
+                subtitle="累计成单"
+              />
             </div>
-          </div>
-        )}
+          </section>
 
-        {!loadError && accounts.length === 0 && (
-          <div className="rounded-lg border border-dashed border-neutral-300 p-8 text-center text-neutral-500">
-            暂无已连接的店铺,点击右上角按钮开始授权
-          </div>
-        )}
+          {/* 店铺矩阵 */}
+          <section className="mb-8">
+            <h2 className="mb-4 text-lg font-semibold">店铺矩阵</h2>
+            <ShopMatrix shops={data.shops} />
+          </section>
 
-        {accounts.length > 0 && (
-          <ul className="divide-y divide-neutral-200 rounded-lg border border-neutral-200 bg-white">
-            {accounts.map((acc) => (
-              <li
-                key={acc.id}
-                className="flex items-center justify-between px-4 py-3"
-              >
-                <div>
-                  <div className="font-medium">{acc.account_name}</div>
-                  <div className="text-xs text-neutral-500">
-                    {acc.platform.toUpperCase()} · {acc.market.toUpperCase()}
-                  </div>
-                </div>
-                <span
-                  className={`rounded-full px-2 py-0.5 text-xs ${
-                    acc.is_active
-                      ? 'bg-green-100 text-green-700'
-                      : 'bg-neutral-100 text-neutral-500'
-                  }`}
-                >
-                  {acc.is_active ? '已激活' : '未激活'}
-                </span>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
+          {/* Claude 洞察 */}
+          <section>
+            <InsightPanel windowDays={data.windowDays} />
+          </section>
+        </>
+      )}
     </main>
   );
 }
