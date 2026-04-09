@@ -90,23 +90,31 @@ xinyuan-ads/
 
 ### ✅ 已完成
 
-1. 项目规划和架构设计(`docs/` 下的两份文档)
+1. 项目规划和架构设计(`docs/` 下三份文档,含 `03-master-plan.md` 完整规划)
 2. Supabase `ads` schema SQL(8 张表、1 个视图、RLS 策略、触发器)
 3. TikTok OAuth 完整流程代码(authorize → callback → 写库)
 4. Supabase 客户端工具(anon 和 service role 两种模式)
 5. 项目 README 和环境变量模板
+6. **Phase 1 · 任务 1.1**:Next.js 15 + TS + Tailwind + App Router 骨架已搭建,`npx next build` 通过
+7. **Phase 1 · 任务 1.2**:依赖齐全(@supabase/ssr、@supabase/supabase-js、@anthropic-ai/sdk、date-fns、recharts、tailwindcss-animate)
+8. **Phase 1 · 任务 1.3**:shadcn/ui 已初始化(Neutral 主题,Tailwind v3 兼容写法),已 add `button / card / table / badge`
+9. **Phase 1 · 任务 1.4**:`.env.local` 占位文件已创建(待用户填入真实 key)
+10. **Phase 1 · 任务 1.5**:`src/app/auth/result/page.tsx` 授权结果页已完成
+11. **Phase 1 · 任务 1.6**:首页 `src/app/page.tsx` 已完成(含已连接店铺列表 + 连接按钮 + 空状态)
 
 ### 🔨 进行中 / 待办(按顺序)
 
 **第 1 周:让项目"活"起来**
-- [ ] 在 TikTok Partner Center 提交应用审核(用户已在做)
-- [ ] 在 Supabase 执行 `001_ads_schema.sql`,并在 Exposed schemas 添加 `ads`
-- [ ] `npx create-next-app@latest` 初始化 Next.js 项目,复制已有代码进去
-- [ ] 安装依赖:`@supabase/supabase-js @supabase/ssr @anthropic-ai/sdk date-fns`
-- [ ] 初始化 shadcn/ui
-- [ ] 推 GitHub + 连接 Netlify + 配置环境变量
-- [ ] 做极简首页(标题 + 已连接店铺列表 + 连接按钮)
-- [ ] 做 `/auth/result` 授权结果页
+- [x] 在 TikTok Partner Center 提交应用审核
+- [x] 在 Supabase 执行 `001_ads_schema.sql`,并在 Exposed schemas 添加 `ads`
+- [x] 初始化 Next.js 项目骨架
+- [x] 安装依赖(含 recharts、tailwindcss-animate)
+- [x] 初始化 shadcn/ui(button/card/table/badge)
+- [x] `.env.local` 占位文件(待用户填 key)
+- [x] 极简首页(已连接店铺列表 + 连接按钮 + 空状态)
+- [x] `/auth/result` 授权结果页
+- [ ] **任务 1.7**:Git 初始化 + 推 GitHub
+- [ ] **任务 1.8**:Netlify 连接 + 部署 + 环境变量
 
 **第 2 周:假数据 + 看板雏形**
 - [ ] 写种子数据脚本,往 Supabase 塞 6 店铺 × 30 天模拟数据
