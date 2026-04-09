@@ -131,6 +131,21 @@ xinyuan-ads/
 - Mock 账户用 `[MOCK]` 前缀 + `external_account_id` 以 `mock-` 开头区分真假数据
 - 数据符合业务感:ROI 1.5-4 区间,有涨有跌,10% 广告注入异常日供后续 Phase 3 异常检测测试
 
+### ✅ Phase 2 · 任务 2.2(2026-04-10)
+
+- 首页改造成店铺矩阵看板
+- 顶部 5 个核心指标卡片(总花费/GMV/ROI/花费占比/订单)
+- 中部 6 店铺 2×3 矩阵(国旗+核心指标+ROI 状态色)
+- 底部 Claude 洞察 mock 面板
+- `src/lib/dashboard/queries.ts` 集中聚合查询
+
+### ✅ Phase 2 · 任务 2.3(2026-04-10,走 PR #1 预览流程)
+
+- 新增动态路由 `src/app/shops/[id]/page.tsx`
+- 趋势图:Recharts ComposedChart,双 Y 轴,柱=花费+GMV / 折线=ROI + 花费占比
+- 广告活动列表:shadcn Table,按花费倒序
+- 从 2.3 开始所有改动走 feature 分支 + PR 预览,不再直推 main
+
 **Phase 1 期间踩过的坑(已写入 001_ads_schema.sql 和代码)**:
 1. Supabase 新版 UI 需要在 Exposed schemas **和** Exposed tables 两处都勾选
 2. 创建 schema 后必须显式 `GRANT USAGE ON SCHEMA ads TO anon, authenticated, service_role`
