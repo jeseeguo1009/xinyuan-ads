@@ -1,0 +1,43 @@
+# ===== Node / Next.js =====
+node_modules/
+.next/
+out/
+build/
+dist/
+*.tsbuildinfo
+next-env.d.ts
+
+# ===== 环境变量 =====
+.env
+.env.local
+.env.*.local
+# 保留模板
+!.env.example
+
+# ===== 日志 =====
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+logs/
+*.log
+
+# ===== 系统 =====
+.DS_Store
+Thumbs.db
+*.swp
+
+# ===== IDE =====
+.vscode/
+.idea/
+*.iml
+
+# ===== Supabase 本地 =====
+supabase/.branches
+supabase/.temp
+
+# ===== Netlify =====
+.netlify/
+
+# ===== 测试 =====
+coverage/
