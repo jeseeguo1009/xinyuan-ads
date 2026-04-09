@@ -21,7 +21,14 @@ export default async function HomePage() {
     if (error) throw error;
     accounts = data ?? [];
   } catch (err) {
-    loadError = err instanceof Error ? err.message : String(err);
+    // Supabase 返回的是 PostgrestError 对象,不是 Error 实例
+    if (err instanceof Error) {
+      loadError = err.message;
+    } else if (err && typeof err === 'object') {
+      loadError = JSON.stringify(err);
+    } else {
+      loadError = String(err);
+    }
   }
 
   return (
