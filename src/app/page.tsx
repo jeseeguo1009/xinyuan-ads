@@ -58,7 +58,7 @@ export default async function HomePage() {
         <>
           {/* 顶部核心指标 */}
           <section className="mb-8">
-            <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+            <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
               <MetricCard
                 title="总花费"
                 value={formatCny(data.totals.spendCny)}
@@ -72,17 +72,31 @@ export default async function HomePage() {
               <MetricCard
                 title="整体 ROI"
                 value={data.totals.roi.toFixed(2)}
-                subtitle={
-                  data.totals.gmvCny > 0
-                    ? `花费占比 ${((data.totals.spendCny / data.totals.gmvCny) * 100).toFixed(1)}%`
-                    : '暂无 GMV'
-                }
+                subtitle={data.totals.roi >= 2 ? '表现良好' : '需要关注'}
                 accent={
                   data.totals.roi >= 2
                     ? 'success'
                     : data.totals.roi >= 1
                       ? 'warning'
                       : 'danger'
+                }
+              />
+              <MetricCard
+                title="花费占比"
+                value={
+                  data.totals.gmvCny > 0
+                    ? `${((data.totals.spendCny / data.totals.gmvCny) * 100).toFixed(1)}%`
+                    : '-'
+                }
+                subtitle="花费 / GMV"
+                accent={
+                  data.totals.gmvCny > 0
+                    ? data.totals.spendCny / data.totals.gmvCny < 0.5
+                      ? 'success'
+                      : data.totals.spendCny / data.totals.gmvCny < 1
+                        ? 'warning'
+                        : 'danger'
+                    : 'default'
                 }
               />
               <MetricCard

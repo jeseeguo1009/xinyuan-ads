@@ -78,7 +78,7 @@ export default async function ShopDetailPage({ params }: Props) {
 
           {/* 指标卡片 */}
           <section className="mb-8">
-            <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+            <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
               <MetricCard
                 title="总花费"
                 value={formatCny(detail.shop.spendCny)}
@@ -90,17 +90,30 @@ export default async function ShopDetailPage({ params }: Props) {
               <MetricCard
                 title="ROI"
                 value={detail.shop.roi.toFixed(2)}
-                subtitle={
-                  detail.shop.gmvCny > 0
-                    ? `花费占比 ${((detail.shop.spendCny / detail.shop.gmvCny) * 100).toFixed(1)}%`
-                    : '暂无 GMV'
-                }
                 accent={
                   detail.shop.roi >= 2
                     ? 'success'
                     : detail.shop.roi >= 1
                       ? 'warning'
                       : 'danger'
+                }
+              />
+              <MetricCard
+                title="花费占比"
+                value={
+                  detail.shop.gmvCny > 0
+                    ? `${((detail.shop.spendCny / detail.shop.gmvCny) * 100).toFixed(1)}%`
+                    : '-'
+                }
+                subtitle="花费 / GMV"
+                accent={
+                  detail.shop.gmvCny > 0
+                    ? detail.shop.spendCny / detail.shop.gmvCny < 0.5
+                      ? 'success'
+                      : detail.shop.spendCny / detail.shop.gmvCny < 1
+                        ? 'warning'
+                        : 'danger'
+                    : 'default'
                 }
               />
               <MetricCard

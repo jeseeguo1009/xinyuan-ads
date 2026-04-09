@@ -164,6 +164,7 @@ export interface DailyPoint {
   gmvCny: number;
   orders: number;
   roi: number;
+  spendRatio: number; // 花费占比 = spend / gmv × 100,%
 }
 
 export interface CampaignRow {
@@ -251,6 +252,7 @@ export async function getShopDetail(
       gmvCny: +v.gmv.toFixed(2),
       orders: v.orders,
       roi: v.spend > 0 ? +(v.gmv / v.spend).toFixed(2) : 0,
+      spendRatio: v.gmv > 0 ? +((v.spend / v.gmv) * 100).toFixed(2) : 0,
     }));
 
   // 4. 店铺窗口汇总(复用 ShopSummary 结构)

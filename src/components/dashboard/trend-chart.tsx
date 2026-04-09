@@ -49,6 +49,8 @@ export function TrendChart({ data }: TrendChartProps) {
             stroke="#888"
             domain={[0, 'auto']}
           />
+          {/* 花费占比独立刻度(0-100%),隐藏避免视觉拥挤 */}
+          <YAxis yAxisId="ratio" orientation="right" domain={[0, 100]} hide />
           <Tooltip
             contentStyle={{
               background: 'white',
@@ -59,6 +61,7 @@ export function TrendChart({ data }: TrendChartProps) {
             formatter={(value, name) => {
               const num = typeof value === 'number' ? value : Number(value);
               if (name === 'ROI') return [num.toFixed(2), 'ROI'];
+              if (name === '花费占比') return [`${num.toFixed(1)}%`, '花费占比'];
               return [
                 `¥${num.toLocaleString('zh-CN', { maximumFractionDigits: 0 })}`,
                 name,
@@ -87,6 +90,16 @@ export function TrendChart({ data }: TrendChartProps) {
             name="ROI"
             stroke="#3b82f6"
             strokeWidth={2}
+            dot={{ r: 3 }}
+          />
+          <Line
+            yAxisId="ratio"
+            type="monotone"
+            dataKey="spendRatio"
+            name="花费占比"
+            stroke="#a855f7"
+            strokeWidth={2}
+            strokeDasharray="4 4"
             dot={{ r: 3 }}
           />
         </ComposedChart>
