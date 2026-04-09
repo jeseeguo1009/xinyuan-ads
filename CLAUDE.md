@@ -113,8 +113,23 @@ xinyuan-ads/
 - [x] `.env.local` 占位文件(待用户填 key)
 - [x] 极简首页(已连接店铺列表 + 连接按钮 + 空状态)
 - [x] `/auth/result` 授权结果页
-- [ ] **任务 1.7**:Git 初始化 + 推 GitHub
-- [ ] **任务 1.8**:Netlify 连接 + 部署 + 环境变量
+- [x] **任务 1.7**:Git 初始化 + 推 GitHub(https://github.com/jeseeguo1009/xinyuan-ads)
+- [x] **任务 1.8**:Netlify 连接 + 部署(https://xinyuan-ads.netlify.app)+ 环境变量
+
+### 🎯 Phase 1 · M1 里程碑已达成(2026-04-10)
+
+- 站点 https://xinyuan-ads.netlify.app 线上可访问
+- 首页显示"暂无已连接的店铺"空状态,Supabase 连接正常
+- Supabase ads schema 8 张表已创建并授权
+- GRANT 权限和 Exposed schemas/tables 已配置
+
+**Phase 1 期间踩过的坑(已写入 001_ads_schema.sql 和代码)**:
+1. Supabase 新版 UI 需要在 Exposed schemas **和** Exposed tables 两处都勾选
+2. 创建 schema 后必须显式 `GRANT USAGE ON SCHEMA ads TO anon, authenticated, service_role`
+3. shadcn 新版默认吐 Tailwind v4 语法,和 v3 不兼容,需手写 config
+4. shadcn init 会加 Geist Google Font,本地网络不稳需移除
+5. 首页用 `export const dynamic = 'force-dynamic'` 避免 Netlify 缓存错误响应
+6. Supabase 查询显式 `.schema('ads')` 比依赖 `db.schema` 默认配置更稳
 
 **第 2 周:假数据 + 看板雏形**
 - [ ] 写种子数据脚本,往 Supabase 塞 6 店铺 × 30 天模拟数据
