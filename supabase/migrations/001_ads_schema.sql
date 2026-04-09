@@ -418,3 +418,37 @@ CREATE POLICY "authenticated_read_metrics"
 --   2. 手动插入第一条测试账户数据
 --   3. 开发数据拉取 Edge Function
 -- =====================================================================
+
+-- =====================================================================
+-- 9. 权限授予(PostgREST / Supabase Data API 必需)
+-- 说明:创建 schema 后,三个角色(anon/authenticated/service_role)
+--      默认没有 USAGE 权限,必须显式 GRANT,否则 API 报
+--      "permission denied for schema ads"
+-- =====================================================================
+
+GRANT USAGE ON SCHEMA ads TO anon, authenticated, service_role;
+
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA ads
+  TO anon, authenticated, service_role;
+
+GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA ads
+  TO anon, authenticated, service_role;
+
+-- 未来新建的表/序列也自动授权
+ALTER DEFAULT PRIVILEGES IN SCHEMA ads
+  GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES
+  TO anon, authenticated, service_role;
+
+ALTER DEFAULT PRIVILEGES IN SCHEMA ads
+  GRANT USAGE, SELECT ON SEQUENCES
+  TO anon, authenticated, service_role;
+
+-- 通知 PostgREST 重新加载配置(使 GRANT 立即生效)
+NOTIFY pgrst, 'reload config';
+
+-- =====================================================================
+-- 使用前检查清单:
+--   ✅ Supabase Project Settings → API → Exposed schemas 已添加 `ads`
+--   ✅ Exposed tables 已勾选需要的表(默认全 8 张)
+--   ✅ 本 SQL 已完整执行一次
+-- =====================================================================

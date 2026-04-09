@@ -1,5 +1,9 @@
 import { createServiceRoleClient } from '@/lib/supabase/server';
 
+// 强制动态渲染,避免 Netlify 缓存错误响应
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 // 首页服务端渲染:拉取已连接的广告账户列表
 export default async function HomePage() {
   let accounts: Array<{
@@ -13,7 +17,9 @@ export default async function HomePage() {
 
   try {
     const supabase = createServiceRoleClient();
+    // 显式指定 schema('ads'),不依赖 client 的默认 schema 配置
     const { data, error } = await supabase
+      .schema('ads')
       .from('accounts')
       .select('id, platform, market, account_name, is_active')
       .order('created_at', { ascending: false });
