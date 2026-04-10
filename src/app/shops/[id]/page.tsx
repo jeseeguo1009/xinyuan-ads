@@ -4,10 +4,8 @@ import { getShopDetail, formatCny, formatNumber } from '@/lib/dashboard/queries'
 import { MetricCard } from '@/components/dashboard/metric-card';
 import { TrendChart } from '@/components/dashboard/trend-chart';
 import { CampaignTable } from '@/components/dashboard/campaign-table';
-import {
-  DateRangePicker,
-  parseDateRangeParams,
-} from '@/components/dashboard/date-range-picker';
+import { DateRangePicker } from '@/components/dashboard/date-range-picker';
+import { parseDateRangeParams } from '@/lib/dashboard/date-range';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;

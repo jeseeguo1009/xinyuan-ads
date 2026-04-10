@@ -175,30 +175,5 @@ export function DateRangePicker({ from, to }: DateRangePickerProps) {
   );
 }
 
-// ---------- 工具函数(服务端也可用)----------
-
-/** 从 searchParams 解析 from/to,默认最近 N 天 */
-export function parseDateRangeParams(
-  params: { from?: string | string[]; to?: string | string[] },
-  defaultDays = 7
-): { from: string; to: string } {
-  const pickStr = (v: string | string[] | undefined): string | undefined =>
-    Array.isArray(v) ? v[0] : v;
-
-  const fromRaw = pickStr(params.from);
-  const toRaw = pickStr(params.to);
-
-  // 简单的日期格式校验
-  const isValid = (s?: string) => !!s && /^\d{4}-\d{2}-\d{2}$/.test(s);
-
-  if (isValid(fromRaw) && isValid(toRaw)) {
-    return { from: fromRaw!, to: toRaw! };
-  }
-
-  // 降级:最近 N 天
-  const now = new Date();
-  return {
-    from: format(subDays(now, defaultDays - 1), 'yyyy-MM-dd'),
-    to: format(now, 'yyyy-MM-dd'),
-  };
-}
+// parseDateRangeParams 抽到了 src/lib/dashboard/date-range.ts
+// 因为 'use client' 文件里的 export 不能在服务端组件里调用

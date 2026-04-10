@@ -3,10 +3,8 @@ import { MetricCard } from '@/components/dashboard/metric-card';
 import { ShopMatrix } from '@/components/dashboard/shop-matrix';
 import { InsightPanel } from '@/components/dashboard/insight-panel';
 import { SyncButton } from '@/components/dashboard/sync-button';
-import {
-  DateRangePicker,
-  parseDateRangeParams,
-} from '@/components/dashboard/date-range-picker';
+import { DateRangePicker } from '@/components/dashboard/date-range-picker';
+import { parseDateRangeParams } from '@/lib/dashboard/date-range';
 
 // 强制动态渲染,每次访问都查最新数据
 export const dynamic = 'force-dynamic';
