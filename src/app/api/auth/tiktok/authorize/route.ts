@@ -13,8 +13,12 @@ import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { buildAuthorizeUrl, generateState } from '@/lib/tiktok/auth';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   try {
+    console.log('[TikTok Authorize] TIKTOK_APP_KEY exists:', !!process.env.TIKTOK_APP_KEY);
+
     // 1. 生成 state 并存入 cookie
     const state = generateState();
     const cookieStore = await cookies();
