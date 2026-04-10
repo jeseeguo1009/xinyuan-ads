@@ -131,9 +131,14 @@ export default async function HomePage({ searchParams }: HomePageProps) {
             <ShopMatrix shops={data.shops} />
           </section>
 
-          {/* Claude 洞察 */}
+          {/* Claude 洞察(全局日报) */}
           <section>
-            <InsightPanel windowDays={data.windowDays} />
+            <InsightPanel
+              scope="global"
+              from={from}
+              to={to}
+              windowDays={data.windowDays}
+            />
           </section>
         </>
       )}

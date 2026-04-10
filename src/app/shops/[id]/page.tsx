@@ -4,6 +4,7 @@ import { getShopDetail, formatCny, formatNumber } from '@/lib/dashboard/queries'
 import { MetricCard } from '@/components/dashboard/metric-card';
 import { TrendChart } from '@/components/dashboard/trend-chart';
 import { CampaignTable } from '@/components/dashboard/campaign-table';
+import { InsightPanel } from '@/components/dashboard/insight-panel';
 import { DateRangePicker } from '@/components/dashboard/date-range-picker';
 import { parseDateRangeParams } from '@/lib/dashboard/date-range';
 
@@ -143,11 +144,22 @@ export default async function ShopDetailPage({ params, searchParams }: Props) {
           </section>
 
           {/* 广告活动列表 */}
-          <section>
+          <section className="mb-8">
             <h2 className="mb-3 text-lg font-semibold">
               广告活动({detail.campaigns.length})
             </h2>
             <CampaignTable campaigns={detail.campaigns} />
+          </section>
+
+          {/* 店铺级 Claude 洞察 */}
+          <section>
+            <InsightPanel
+              scope="shop"
+              shopId={id}
+              from={from}
+              to={to}
+              windowDays={detail.windowDays}
+            />
           </section>
         </>
       )}

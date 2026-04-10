@@ -1,15 +1,13 @@
 'use client';
 
 /**
- * Claude 每日洞察面板 —— 客户端组件
+ * Claude 洞察面板 —— 客户端组件
  *
- * 首屏渲染时 fetch /api/insights/daily 获取日报 Markdown
- * ANTHROPIC_API_KEY 未配置时后端返回 mock 文本(isMock=true),前端显示"Mock"标签
+ * 支持两种模式:
+ *  1. scope="global"  全局日报(首页),调 /api/insights/daily
+ *  2. scope="shop"    店铺洞察(详情页),调 /api/insights/shop/:id
  *
- * Phase 3 后续优化:
- *  - 加 Supabase 缓存,每天只生成 1 次
- *  - 加"刷新"按钮
- *  - 加 Markdown 渲染(现在是 <pre>)
+ * ANTHROPIC_API_KEY 未配置时后端返回 isMock=true,前端显示黄色 Mock 标签
  */
 
 import { useEffect, useState } from 'react';
@@ -17,33 +15,62 @@ import ReactMarkdown from 'react-markdown';
 import { Card, CardContent } from '@/components/ui/card';
 
 interface InsightPanelProps {
-  windowDays: number;
+  /** 洞察范围 */
+  scope?: 'global' | 'shop';
+  /** scope='shop' 时必传 */
+  shopId?: string;
+  /** URL 的 from/to,用于构造 API 请求和 key */
+  from?: string;
+  to?: string;
+  /** 面板标题覆盖 */
+  title?: string;
+  /** 窗口天数(仅用于显示) */
+  windowDays?: number;
 }
 
-interface ReportState {
+interface InsightState {
   loading: boolean;
   error: string | null;
   markdown: string;
   isMock: boolean;
-  reportDate: string;
+  reportDate?: string;
   durationMs: number;
 }
 
-export function InsightPanel({ windowDays }: InsightPanelProps) {
-  const [state, setState] = useState<ReportState>({
+export function InsightPanel({
+  scope = 'global',
+  shopId,
+  from,
+  to,
+  title,
+  windowDays,
+}: InsightPanelProps) {
+  const [state, setState] = useState<InsightState>({
     loading: true,
     error: null,
     markdown: '',
     isMock: false,
-    reportDate: '',
     durationMs: 0,
   });
 
+  const key = `${scope}:${shopId ?? ''}:${from ?? ''}:${to ?? ''}`;
+
   useEffect(() => {
     let cancelled = false;
+    setState((s) => ({ ...s, loading: true, error: null }));
+
     (async () => {
       try {
-        const res = await fetch('/api/insights/daily');
+        const base =
+          scope === 'global'
+            ? '/api/insights/daily'
+            : `/api/insights/shop/${shopId}`;
+        const query = new URLSearchParams();
+        if (from) query.set('from', from);
+        if (to) query.set('to', to);
+        const url = query.toString() ? `${base}?${query.toString()}` : base;
+
+        const res = await fetch(url);
         const json = await res.json();
         if (cancelled) return;
         if (!json.success) {
@@ -52,7 +79,6 @@ export function InsightPanel({ windowDays }: InsightPanelProps) {
             error: json.error ?? '未知错误',
             markdown: '',
             isMock: false,
-            reportDate: '',
             durationMs: 0,
           });
           return;
@@ -72,15 +98,23 @@ export function InsightPanel({ windowDays }: InsightPanelProps) {
           error: err instanceof Error ? err.message : String(err),
           markdown: '',
           isMock: false,
-          reportDate: '',
           durationMs: 0,
         });
       }
     })();
+
     return () => {
       cancelled = true;
     };
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [key]);
+
+  const displayTitle =
+    title ?? (scope === 'global' ? '💡 每日洞察' : '💡 店铺洞察');
+  const subtitle =
+    scope === 'global'
+      ? `全局日报${windowDays ? ` · 最近 ${windowDays} 天` : ''}${state.reportDate ? ` · ${state.reportDate}` : ''}`
+      : `针对该店铺的 Claude 分析${windowDays ? ` · 最近 ${windowDays} 天` : ''}`;
 
   return (
     <Card>
@@ -88,11 +122,10 @@ export function InsightPanel({ windowDays }: InsightPanelProps) {
         <div className="mb-4 flex items-center justify-between">
           <div>
             <h3 className="text-base font-semibold text-neutral-900">
-              💡 每日洞察
+              {displayTitle}
             </h3>
             <p className="mt-0.5 text-xs text-neutral-500">
-              基于最近 {windowDays} 天数据 ·{' '}
-              {state.reportDate ? `报告日 ${state.reportDate}` : '加载中...'}
+              {subtitle}
               {state.durationMs > 0 && ` · ${state.durationMs}ms`}
             </p>
           </div>
@@ -110,7 +143,7 @@ export function InsightPanel({ windowDays }: InsightPanelProps) {
 
         {state.loading && (
           <div className="py-6 text-center text-sm text-neutral-400">
-            Claude 正在生成日报...
+            Claude 正在分析...
           </div>
         )}
 
@@ -125,13 +158,19 @@ export function InsightPanel({ windowDays }: InsightPanelProps) {
             <ReactMarkdown
               components={{
                 h1: ({ children }) => (
-                  <h1 className="mb-2 mt-4 text-base font-bold text-neutral-900">{children}</h1>
+                  <h1 className="mb-2 mt-4 text-base font-bold text-neutral-900">
+                    {children}
+                  </h1>
                 ),
                 h2: ({ children }) => (
-                  <h2 className="mb-2 mt-4 text-base font-bold text-neutral-900">{children}</h2>
+                  <h2 className="mb-2 mt-4 text-base font-bold text-neutral-900">
+                    {children}
+                  </h2>
                 ),
                 h3: ({ children }) => (
-                  <h3 className="mb-1 mt-3 text-sm font-semibold text-neutral-900">{children}</h3>
+                  <h3 className="mb-1 mt-3 text-sm font-semibold text-neutral-900">
+                    {children}
+                  </h3>
                 ),
                 p: ({ children }) => (
                   <p className="my-1 text-sm leading-relaxed">{children}</p>
@@ -143,7 +182,9 @@ export function InsightPanel({ windowDays }: InsightPanelProps) {
                   <li className="my-0.5 leading-relaxed">{children}</li>
                 ),
                 strong: ({ children }) => (
-                  <strong className="font-semibold text-neutral-900">{children}</strong>
+                  <strong className="font-semibold text-neutral-900">
+                    {children}
+                  </strong>
                 ),
               }}
             >
