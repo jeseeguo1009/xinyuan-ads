@@ -146,6 +146,60 @@ xinyuan-ads/
 - 广告活动列表:shadcn Table,按花费倒序
 - 从 2.3 开始所有改动走 feature 分支 + PR 预览,不再直推 main
 
+### 🔨 Phase 3 准备(2026-04-10,PR #2 待审)
+
+**分支**: `feature/phase3-prep`
+**预览**: https://deploy-preview-2--xinyuan-ads.netlify.app
+
+- `src/lib/feishu/webhook.ts` 飞书自定义机器人(text/Markdown 卡片/签名)
+- `src/lib/claude/client.ts` Claude API 封装,缺 key 自动 mock 降级
+- `src/lib/claude/prompts/daily-report.ts` 日报 Prompt 模板
+- `src/lib/dashboard/daily-report.ts` 日报生成器(聚合 daily_metrics + Claude)
+- `src/app/api/insights/daily/route.ts` GET API 返回日报
+- `src/components/dashboard/insight-panel.tsx` 改客户端组件,fetch API,react-markdown 渲染
+- `supabase/functions/fetch-exchange-rates/` 每日汇率 Edge Function(Deno)
+- `supabase/functions/generate-daily-report/` 每日日报 Edge Function(Deno,推飞书)
+- `supabase/functions/README.md` 完整部署指南
+
+**等 key 到位后的上线步骤**:
+1. 填 Netlify 环境变量 `ANTHROPIC_API_KEY`
+2. 触发 Netlify redeploy,首页洞察面板自动切换成"Claude 生成"
+3. `supabase login && supabase link --project-ref dfvmmoptijmqhymukrlz`
+4. `supabase secrets set ANTHROPIC_API_KEY=... FEISHU_WEBHOOK_URL=...`
+5. `supabase functions deploy fetch-exchange-rates generate-daily-report`
+6. pg_cron 配置定时(SQL 见 README)
+
+### 🔨 Phase 4 准备(2026-04-10,PR #3 待审)
+
+**分支**: `feature/phase4-prep`
+**预览**: https://deploy-preview-3--xinyuan-ads.netlify.app
+
+**修复** 3 个 OAuth callback bug:
+1. `platform` 从 'tiktok' 改成 'tiktok_shop'(匹配 enum,之前会写库失败)
+2. `market` 从小写改成大写(匹配 enum,之前会写库失败)
+3. `currency` 从固定 THB 改成按 market 自动映射
+
+**新增**:
+- `src/lib/tiktok/marketing-api.ts` 完整 API wrapper(签名 + 限流重试)
+- `src/lib/tiktok/sync.ts` 同步逻辑(token 刷新 / 分页 / 枚举映射 / sync_logs)
+- `src/app/api/sync/tiktok/route.ts` POST 手动同步,缺 key 自动 mock
+- `src/components/dashboard/sync-button.tsx` 首页"立即同步"按钮 + 上次同步时间
+- `supabase/functions/sync-tiktok-data/` Deno Edge Function 骨架(定时)
+
+**等 key 到位后的上线步骤**:
+1. 填 Netlify 环境变量 `TIKTOK_APP_KEY` `TIKTOK_APP_SECRET`
+2. 从首页点"连接 TikTok 店铺"完成第一个真实授权
+3. 点"立即同步"按钮或 `curl -X POST .../api/sync/tiktok`
+4. 检查 Supabase `ads.sync_logs` / `daily_metrics` 是否有真实数据
+5. `supabase functions deploy sync-tiktok-data` + pg_cron(每小时)
+
+### ⏳ 待办(按优先级 A > B > C)
+
+- [ ] **A. Phase 3 真实接入**: 用户申请 ANTHROPIC_API_KEY + 飞书 webhook,合并 PR #2
+- [ ] **B. Phase 4 真实接入**: 用户填 TIKTOK_APP_KEY/SECRET,合并 PR #3,首次真实授权
+- [ ] **C. Phase 2.5 Auth**: Supabase Auth + profiles 表 + account_assignments 多对多 + RLS
+- [ ] **Phase 2.4 筛选器**: 延后到 Auth 后再做(筛选要长在用户权限上)
+
 **Phase 1 期间踩过的坑(已写入 001_ads_schema.sql 和代码)**:
 1. Supabase 新版 UI 需要在 Exposed schemas **和** Exposed tables 两处都勾选
 2. 创建 schema 后必须显式 `GRANT USAGE ON SCHEMA ads TO anon, authenticated, service_role`
