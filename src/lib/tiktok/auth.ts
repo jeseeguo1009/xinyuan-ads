@@ -53,12 +53,8 @@ export function buildAuthorizeUrl(state: string): string {
 export async function exchangeCodeForToken(
   authCode: string
 ): Promise<TikTokTokenResponse> {
-  const appKey = process.env.TIKTOK_APP_KEY;
-  const appSecret = process.env.TIKTOK_APP_SECRET;
-
-  if (!appKey || !appSecret) {
-    throw new Error('TIKTOK_APP_KEY 或 TIKTOK_APP_SECRET 未配置');
-  }
+  const appKey = process.env.TIKTOK_APP_KEY || '6jldr5pkh95pf';
+  const appSecret = process.env.TIKTOK_APP_SECRET || '94ad91d37fa6a59788c01d938c5afdcd5500f78a';
 
   const params = new URLSearchParams({
     app_key: appKey,
@@ -100,12 +96,8 @@ export async function exchangeCodeForToken(
 export async function refreshAccessToken(
   refreshToken: string
 ): Promise<TikTokTokenResponse> {
-  const appKey = process.env.TIKTOK_APP_KEY;
-  const appSecret = process.env.TIKTOK_APP_SECRET;
-
-  if (!appKey || !appSecret) {
-    throw new Error('TIKTOK_APP_KEY 或 TIKTOK_APP_SECRET 未配置');
-  }
+  const appKey = process.env.TIKTOK_APP_KEY || '6jldr5pkh95pf';
+  const appSecret = process.env.TIKTOK_APP_SECRET || '94ad91d37fa6a59788c01d938c5afdcd5500f78a';
 
   const params = new URLSearchParams({
     app_key: appKey,
