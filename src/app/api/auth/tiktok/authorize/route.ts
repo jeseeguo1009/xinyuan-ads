@@ -10,36 +10,12 @@ export const dynamic = 'force-dynamic';
 
 const TIKTOK_AUTH_BASE = 'https://auth.tiktok-shops.com';
 
+// App Key 不是敏感信息(授权 URL 里本来就可见),直接内联
+// App Secret 才需要保密(仅在 callback 换 token 时使用)
+const APP_KEY = process.env.TIKTOK_APP_KEY || '6jldr5pkh95pf';
+
 export async function GET() {
   try {
-    // 直接在这里读环境变量,不经过 auth.ts
-    const appKey = process.env.TIKTOK_APP_KEY;
-
-    console.log('[TikTok Authorize] env check:', {
-      hasAppKey: !!appKey,
-      appKeyLength: appKey?.length,
-      appKeyPrefix: appKey?.slice(0, 4),
-    });
-
-    if (!appKey) {
-      // 返回诊断信息,看看到底能读到什么
-      const allKeys = Object.keys(process.env)
-        .filter((k) => k.includes('TIKTOK') || k.includes('tiktok'))
-        .join(', ');
-      return NextResponse.json(
-        {
-          error: '发起授权失败',
-          details: 'TIKTOK_APP_KEY 未配置',
-          debug: {
-            envKeysWithTiktok: allKeys || '(无)',
-            totalEnvKeys: Object.keys(process.env).length,
-          },
-        },
-        { status: 500 }
-      );
-    }
-
-    // 生成 state
     const state = crypto.randomUUID();
     const cookieStore = await cookies();
     cookieStore.set('tiktok_oauth_state', state, {
@@ -50,9 +26,8 @@ export async function GET() {
       path: '/',
     });
 
-    // 构造授权 URL
     const params = new URLSearchParams({
-      app_key: appKey,
+      app_key: APP_KEY,
       state,
     });
     const authorizeUrl = `${TIKTOK_AUTH_BASE}/oauth/authorize?${params.toString()}`;
