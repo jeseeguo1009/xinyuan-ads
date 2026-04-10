@@ -21,15 +21,12 @@ export async function POST(request: NextRequest) {
     const accountId = searchParams.get('accountId');
     const days = parseInt(searchParams.get('days') ?? '7', 10);
 
-    // 未配置 TikTok app key 时返回 mock
-    if (!process.env.TIKTOK_APP_KEY || !process.env.TIKTOK_APP_SECRET) {
-      return NextResponse.json({
-        success: true,
-        isMock: true,
-        message: 'TIKTOK_APP_KEY 未配置,同步未执行(mock 响应)',
-        results: [],
-      });
-    }
+    // 检查 TikTok 凭据(env 或 fallback)
+    const appKey = process.env.TIKTOK_APP_KEY || '6jldr5pkh95pf';
+    const appSecret = process.env.TIKTOK_APP_SECRET || '94ad91d37fa6a59788c01d938c5afdcd5500f78a';
+    // 注入到 process.env 供下游 sync 模块使用
+    if (!process.env.TIKTOK_APP_KEY) process.env.TIKTOK_APP_KEY = appKey;
+    if (!process.env.TIKTOK_APP_SECRET) process.env.TIKTOK_APP_SECRET = appSecret;
 
     const results = accountId
       ? [await syncTikTokAccount(accountId, days)]
