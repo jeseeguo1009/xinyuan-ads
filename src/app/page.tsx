@@ -2,6 +2,7 @@ import { getDashboardData, formatCny, formatNumber } from '@/lib/dashboard/queri
 import { MetricCard } from '@/components/dashboard/metric-card';
 import { ShopMatrix } from '@/components/dashboard/shop-matrix';
 import { InsightPanel } from '@/components/dashboard/insight-panel';
+import { SyncButton } from '@/components/dashboard/sync-button';
 
 // 强制动态渲染,每次访问都查最新数据
 export const dynamic = 'force-dynamic';
@@ -38,12 +39,15 @@ export default async function HomePage() {
             )}
           </p>
         </div>
-        <a
-          href="/api/auth/tiktok/authorize"
-          className="rounded-lg bg-neutral-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-neutral-800"
-        >
-          + 连接 TikTok 店铺
-        </a>
+        <div className="flex items-center gap-3">
+          <SyncButton lastSyncedAt={data?.lastSyncedAt ?? null} />
+          <a
+            href="/api/auth/tiktok/authorize"
+            className="rounded-lg bg-neutral-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-neutral-800"
+          >
+            + 连接 TikTok 店铺
+          </a>
+        </div>
       </header>
 
       {/* 错误态 */}

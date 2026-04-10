@@ -34,6 +34,8 @@ export interface DashboardData {
     roi: number;
   };
   shops: ShopSummary[];
+  /** 最近一次成功同步的时间(ISO) */
+  lastSyncedAt: string | null;
 }
 
 /** market 代码 → 中文 + emoji */
@@ -73,6 +75,7 @@ export async function getDashboardData(windowDays = 7): Promise<DashboardData> {
       endDate: endDateStr,
       totals: { spendCny: 0, gmvCny: 0, orders: 0, roi: 0 },
       shops: [],
+      lastSyncedAt: null,
     };
   }
 
@@ -140,6 +143,16 @@ export async function getDashboardData(windowDays = 7): Promise<DashboardData> {
   const totalGmv = shops.reduce((s, x) => s + x.gmvCny, 0);
   const totalOrders = shops.reduce((s, x) => s + x.orders, 0);
 
+  // 查最近一次成功的同步
+  const { data: lastSync } = await supabase
+    .schema('ads')
+    .from('sync_logs')
+    .select('finished_at')
+    .eq('status', 'success')
+    .order('finished_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
   return {
     windowDays,
     startDate: startDateStr,
@@ -151,6 +164,7 @@ export async function getDashboardData(windowDays = 7): Promise<DashboardData> {
       roi: totalSpend > 0 ? +(totalGmv / totalSpend).toFixed(2) : 0,
     },
     shops,
+    lastSyncedAt: lastSync?.finished_at ?? null,
   };
 }
 
