@@ -1,0 +1,204 @@
+'use client';
+
+/**
+ * 日期范围选择器
+ *
+ * 特性:
+ *  - 快捷按钮:7 天 / 14 天 / 30 天 / 本月 / 上月
+ *  - 自定义日历:Popover + shadcn Calendar(range 模式)
+ *  - 选完后跳转 URL: ?from=YYYY-MM-DD&to=YYYY-MM-DD
+ *  - 当前选中的快捷或自定义会高亮
+ */
+
+import * as React from 'react';
+import { useRouter, usePathname } from 'next/navigation';
+import { format, subDays, startOfMonth, endOfMonth, subMonths, isSameDay } from 'date-fns';
+import type { DateRange } from 'react-day-picker';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+
+interface DateRangePickerProps {
+  /** 当前 URL 中的 from/to */
+  from: string;
+  to: string;
+}
+
+interface Preset {
+  key: string;
+  label: string;
+  getRange: () => { from: Date; to: Date };
+}
+
+const PRESETS: Preset[] = [
+  {
+    key: '7d',
+    label: '7 天',
+    getRange: () => ({ from: subDays(new Date(), 6), to: new Date() }),
+  },
+  {
+    key: '14d',
+    label: '14 天',
+    getRange: () => ({ from: subDays(new Date(), 13), to: new Date() }),
+  },
+  {
+    key: '30d',
+    label: '30 天',
+    getRange: () => ({ from: subDays(new Date(), 29), to: new Date() }),
+  },
+  {
+    key: 'thisMonth',
+    label: '本月',
+    getRange: () => ({ from: startOfMonth(new Date()), to: new Date() }),
+  },
+  {
+    key: 'lastMonth',
+    label: '上月',
+    getRange: () => ({
+      from: startOfMonth(subMonths(new Date(), 1)),
+      to: endOfMonth(subMonths(new Date(), 1)),
+    }),
+  },
+];
+
+export function DateRangePicker({ from, to }: DateRangePickerProps) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const [open, setOpen] = React.useState(false);
+  const [pending, setPending] = React.useState<DateRange | undefined>({
+    from: new Date(from),
+    to: new Date(to),
+  });
+
+  const currentFrom = new Date(from);
+  const currentTo = new Date(to);
+
+  const activePreset = PRESETS.find((p) => {
+    const r = p.getRange();
+    return isSameDay(r.from, currentFrom) && isSameDay(r.to, currentTo);
+  });
+
+  function navigate(fromDate: Date, toDate: Date) {
+    const params = new URLSearchParams();
+    params.set('from', format(fromDate, 'yyyy-MM-dd'));
+    params.set('to', format(toDate, 'yyyy-MM-dd'));
+    router.push(`${pathname}?${params.toString()}`);
+  }
+
+  function applyPreset(preset: Preset) {
+    const r = preset.getRange();
+    navigate(r.from, r.to);
+  }
+
+  function applyCustom() {
+    if (pending?.from && pending?.to) {
+      navigate(pending.from, pending.to);
+      setOpen(false);
+    }
+  }
+
+  const rangeLabel =
+    isSameDay(currentFrom, currentTo)
+      ? format(currentFrom, 'yyyy-MM-dd')
+      : `${format(currentFrom, 'MM-dd')} ~ ${format(currentTo, 'MM-dd')}`;
+
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      {/* 快捷按钮 */}
+      <div className="inline-flex rounded-lg border border-neutral-200 bg-white p-0.5">
+        {PRESETS.map((preset) => {
+          const active = activePreset?.key === preset.key;
+          return (
+            <button
+              key={preset.key}
+              onClick={() => applyPreset(preset)}
+              className={`rounded-md px-3 py-1 text-xs font-medium transition ${
+                active
+                  ? 'bg-neutral-900 text-white'
+                  : 'text-neutral-600 hover:bg-neutral-100'
+              }`}
+            >
+              {preset.label}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* 自定义日历 */}
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger
+          className={`inline-flex items-center gap-2 rounded-lg border px-3 py-1.5 text-xs font-medium transition ${
+            !activePreset
+              ? 'border-neutral-900 bg-neutral-900 text-white'
+              : 'border-neutral-200 bg-white text-neutral-700 hover:bg-neutral-50'
+          }`}
+        >
+          📅 {!activePreset ? rangeLabel : '自定义'}
+        </PopoverTrigger>
+        <PopoverContent className="w-auto p-3" align="end">
+          <Calendar
+            mode="range"
+            numberOfMonths={2}
+            selected={pending}
+            onSelect={setPending}
+            defaultMonth={currentFrom}
+          />
+          <div className="mt-3 flex items-center justify-between border-t border-neutral-200 pt-3">
+            <div className="text-xs text-neutral-500">
+              {pending?.from && (
+                <>
+                  {format(pending.from, 'yyyy-MM-dd')}
+                  {pending.to &&
+                    !isSameDay(pending.from, pending.to) &&
+                    ` ~ ${format(pending.to, 'yyyy-MM-dd')}`}
+                </>
+              )}
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setOpen(false)}
+                className="rounded-md border border-neutral-200 px-3 py-1 text-xs text-neutral-600 hover:bg-neutral-50"
+              >
+                取消
+              </button>
+              <button
+                onClick={applyCustom}
+                disabled={!pending?.from || !pending?.to}
+                className="rounded-md bg-neutral-900 px-3 py-1 text-xs text-white hover:bg-neutral-800 disabled:opacity-50"
+              >
+                应用
+              </button>
+            </div>
+          </div>
+        </PopoverContent>
+      </Popover>
+    </div>
+  );
+}
+
+// ---------- 工具函数(服务端也可用)----------
+
+/** 从 searchParams 解析 from/to,默认最近 N 天 */
+export function parseDateRangeParams(
+  params: { from?: string | string[]; to?: string | string[] },
+  defaultDays = 7
+): { from: string; to: string } {
+  const pickStr = (v: string | string[] | undefined): string | undefined =>
+    Array.isArray(v) ? v[0] : v;
+
+  const fromRaw = pickStr(params.from);
+  const toRaw = pickStr(params.to);
+
+  // 简单的日期格式校验
+  const isValid = (s?: string) => !!s && /^\d{4}-\d{2}-\d{2}$/.test(s);
+
+  if (isValid(fromRaw) && isValid(toRaw)) {
+    return { from: fromRaw!, to: toRaw! };
+  }
+
+  // 降级:最近 N 天
+  const now = new Date();
+  return {
+    from: format(subDays(now, defaultDays - 1), 'yyyy-MM-dd'),
+    to: format(now, 'yyyy-MM-dd'),
+  };
+}

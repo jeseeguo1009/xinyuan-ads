@@ -5,27 +5,27 @@ import { MetricCard } from '@/components/dashboard/metric-card';
 import { TrendChart } from '@/components/dashboard/trend-chart';
 import { CampaignTable } from '@/components/dashboard/campaign-table';
 import {
-  DateRangeTabs,
-  parseDaysParam,
-} from '@/components/dashboard/date-range-tabs';
+  DateRangePicker,
+  parseDateRangeParams,
+} from '@/components/dashboard/date-range-picker';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 interface Props {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ days?: string }>;
+  searchParams: Promise<{ from?: string; to?: string }>;
 }
 
 export default async function ShopDetailPage({ params, searchParams }: Props) {
   const { id } = await params;
   const sp = await searchParams;
-  const days = parseDaysParam(sp.days, 30);
+  const { from, to } = parseDateRangeParams(sp, 30);
 
   let detail;
   let loadError: string | null = null;
   try {
-    detail = await getShopDetail(id, days);
+    detail = await getShopDetail(id, { from, to });
   } catch (err) {
     loadError =
       err instanceof Error
@@ -81,7 +81,7 @@ export default async function ShopDetailPage({ params, searchParams }: Props) {
                 </span>
               </div>
             </div>
-            <DateRangeTabs current={days} basePath={`/shops/${id}`} />
+            <DateRangePicker from={from} to={to} />
           </header>
 
           {/* 指标卡片 */}
@@ -134,7 +134,7 @@ export default async function ShopDetailPage({ params, searchParams }: Props) {
           {/* 趋势图 */}
           <section className="mb-8">
             <div className="mb-3 flex items-center justify-between">
-              <h2 className="text-lg font-semibold">趋势({days} 天)</h2>
+              <h2 className="text-lg font-semibold">趋势({detail.windowDays} 天)</h2>
               <div className="text-xs text-neutral-400">
                 柱:花费 / GMV   折线:ROI
               </div>

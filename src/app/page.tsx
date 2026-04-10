@@ -4,27 +4,27 @@ import { ShopMatrix } from '@/components/dashboard/shop-matrix';
 import { InsightPanel } from '@/components/dashboard/insight-panel';
 import { SyncButton } from '@/components/dashboard/sync-button';
 import {
-  DateRangeTabs,
-  parseDaysParam,
-} from '@/components/dashboard/date-range-tabs';
+  DateRangePicker,
+  parseDateRangeParams,
+} from '@/components/dashboard/date-range-picker';
 
 // 强制动态渲染,每次访问都查最新数据
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 interface HomePageProps {
-  searchParams: Promise<{ days?: string }>;
+  searchParams: Promise<{ from?: string; to?: string }>;
 }
 
 export default async function HomePage({ searchParams }: HomePageProps) {
   const params = await searchParams;
-  const days = parseDaysParam(params.days, 7);
+  const { from, to } = parseDateRangeParams(params, 7);
 
   let data;
   let loadError: string | null = null;
 
   try {
-    data = await getDashboardData(days);
+    data = await getDashboardData({ from, to });
   } catch (err) {
     if (err instanceof Error) {
       loadError = err.message;
@@ -61,9 +61,9 @@ export default async function HomePage({ searchParams }: HomePageProps) {
         </div>
       </header>
 
-      {/* 时间段 Tab */}
+      {/* 时间段选择 */}
       <div className="mb-6">
-        <DateRangeTabs current={days} basePath="/" />
+        <DateRangePicker from={from} to={to} />
       </div>
 
       {/* 错误态 */}
