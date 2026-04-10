@@ -34,6 +34,8 @@ export interface DashboardData {
     roi: number;
   };
   shops: ShopSummary[];
+  /** 最近一次成功同步的时间(ISO) */
+  lastSyncedAt: string | null;
 }
 
 /** market 代码 → 中文 + emoji */
@@ -48,14 +50,35 @@ const MARKET_INFO: Record<string, { country: string; flag: string }> = {
 
 /**
  * 获取首页看板数据
- * @param windowDays 统计窗口天数,默认 7 天
+ * @param opts 日期范围,两种用法:
+ *   - { windowDays: 7 }  最近 N 天(快捷方式)
+ *   - { from: '2026-03-01', to: '2026-03-15' }  指定范围
+ *   - 不传 → 默认最近 7 天
  */
-export async function getDashboardData(windowDays = 7): Promise<DashboardData> {
+export async function getDashboardData(
+  opts: { windowDays?: number; from?: string; to?: string } | number = {}
+): Promise<DashboardData> {
+  // 兼容老的 number 传参
+  if (typeof opts === 'number') opts = { windowDays: opts };
+
   const supabase = createServiceRoleClient();
-  const endDate = new Date();
-  const startDate = subDays(endDate, windowDays - 1);
-  const startDateStr = format(startDate, 'yyyy-MM-dd');
-  const endDateStr = format(endDate, 'yyyy-MM-dd');
+  let startDateStr: string;
+  let endDateStr: string;
+  let windowDays: number;
+
+  if (opts.from && opts.to) {
+    startDateStr = opts.from;
+    endDateStr = opts.to;
+    const from = new Date(opts.from);
+    const to = new Date(opts.to);
+    windowDays = Math.max(1, Math.round((to.getTime() - from.getTime()) / 86400000) + 1);
+  } else {
+    windowDays = opts.windowDays ?? 7;
+    const endDate = new Date();
+    const startDate = subDays(endDate, windowDays - 1);
+    startDateStr = format(startDate, 'yyyy-MM-dd');
+    endDateStr = format(endDate, 'yyyy-MM-dd');
+  }
 
   // 1. 拉所有活跃账户
   const { data: accounts, error: accErr } = await supabase
@@ -73,6 +96,7 @@ export async function getDashboardData(windowDays = 7): Promise<DashboardData> {
       endDate: endDateStr,
       totals: { spendCny: 0, gmvCny: 0, orders: 0, roi: 0 },
       shops: [],
+      lastSyncedAt: null,
     };
   }
 
@@ -140,6 +164,16 @@ export async function getDashboardData(windowDays = 7): Promise<DashboardData> {
   const totalGmv = shops.reduce((s, x) => s + x.gmvCny, 0);
   const totalOrders = shops.reduce((s, x) => s + x.orders, 0);
 
+  // 查最近一次成功的同步
+  const { data: lastSync } = await supabase
+    .schema('ads')
+    .from('sync_logs')
+    .select('finished_at')
+    .eq('status', 'success')
+    .order('finished_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
   return {
     windowDays,
     startDate: startDateStr,
@@ -151,6 +185,7 @@ export async function getDashboardData(windowDays = 7): Promise<DashboardData> {
       roi: totalSpend > 0 ? +(totalGmv / totalSpend).toFixed(2) : 0,
     },
     shops,
+    lastSyncedAt: lastSync?.finished_at ?? null,
   };
 }
 
@@ -192,13 +227,27 @@ export interface ShopDetail {
  */
 export async function getShopDetail(
   shopId: string,
-  windowDays = 30
+  opts: { windowDays?: number; from?: string; to?: string } | number = {}
 ): Promise<ShopDetail | null> {
+  if (typeof opts === 'number') opts = { windowDays: opts };
   const supabase = createServiceRoleClient();
-  const endDate = new Date();
-  const startDate = subDays(endDate, windowDays - 1);
-  const startDateStr = format(startDate, 'yyyy-MM-dd');
-  const endDateStr = format(endDate, 'yyyy-MM-dd');
+  let startDateStr: string;
+  let endDateStr: string;
+  let windowDays: number;
+
+  if (opts.from && opts.to) {
+    startDateStr = opts.from;
+    endDateStr = opts.to;
+    const from = new Date(opts.from);
+    const to = new Date(opts.to);
+    windowDays = Math.max(1, Math.round((to.getTime() - from.getTime()) / 86400000) + 1);
+  } else {
+    windowDays = opts.windowDays ?? 30;
+    const endDate = new Date();
+    const startDate = subDays(endDate, windowDays - 1);
+    startDateStr = format(startDate, 'yyyy-MM-dd');
+    endDateStr = format(endDate, 'yyyy-MM-dd');
+  }
 
   // 1. 店铺信息
   const { data: acc, error: accErr } = await supabase

@@ -2,17 +2,27 @@ import { getDashboardData, formatCny, formatNumber } from '@/lib/dashboard/queri
 import { MetricCard } from '@/components/dashboard/metric-card';
 import { ShopMatrix } from '@/components/dashboard/shop-matrix';
 import { InsightPanel } from '@/components/dashboard/insight-panel';
+import { SyncButton } from '@/components/dashboard/sync-button';
+import { DateRangePicker } from '@/components/dashboard/date-range-picker';
+import { parseDateRangeParams } from '@/lib/dashboard/date-range';
 
 // 强制动态渲染,每次访问都查最新数据
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-export default async function HomePage() {
+interface HomePageProps {
+  searchParams: Promise<{ from?: string; to?: string }>;
+}
+
+export default async function HomePage({ searchParams }: HomePageProps) {
+  const params = await searchParams;
+  const { from, to } = parseDateRangeParams(params, 7);
+
   let data;
   let loadError: string | null = null;
 
   try {
-    data = await getDashboardData(7);
+    data = await getDashboardData({ from, to });
   } catch (err) {
     if (err instanceof Error) {
       loadError = err.message;
@@ -26,11 +36,11 @@ export default async function HomePage() {
   return (
     <main className="mx-auto max-w-6xl px-6 py-10">
       {/* Header */}
-      <header className="mb-8 flex items-end justify-between">
+      <header className="mb-6 flex items-end justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">欣远广告 Agent</h1>
           <p className="mt-1 text-sm text-neutral-500">
-            TikTok Shop + Shopee 广告数据统一看板 · 最近 {data?.windowDays ?? 7} 天
+            TikTok Shop + Shopee 广告数据统一看板
             {data && (
               <span className="ml-2 text-neutral-400">
                 ({data.startDate} ~ {data.endDate})
@@ -38,13 +48,21 @@ export default async function HomePage() {
             )}
           </p>
         </div>
-        <a
-          href="/api/auth/tiktok/authorize"
-          className="rounded-lg bg-neutral-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-neutral-800"
-        >
-          + 连接 TikTok 店铺
-        </a>
+        <div className="flex items-center gap-3">
+          <SyncButton lastSyncedAt={data?.lastSyncedAt ?? null} />
+          <a
+            href="/api/auth/tiktok/authorize"
+            className="rounded-lg bg-neutral-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-neutral-800"
+          >
+            + 连接 TikTok 店铺
+          </a>
+        </div>
       </header>
+
+      {/* 时间段选择 */}
+      <div className="mb-6">
+        <DateRangePicker from={from} to={to} />
+      </div>
 
       {/* 错误态 */}
       {loadError && (
@@ -113,9 +131,14 @@ export default async function HomePage() {
             <ShopMatrix shops={data.shops} />
           </section>
 
-          {/* Claude 洞察 */}
+          {/* Claude 洞察(全局日报) */}
           <section>
-            <InsightPanel windowDays={data.windowDays} />
+            <InsightPanel
+              scope="global"
+              from={from}
+              to={to}
+              windowDays={data.windowDays}
+            />
           </section>
         </>
       )}

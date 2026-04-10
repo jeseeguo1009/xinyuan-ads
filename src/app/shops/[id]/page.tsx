@@ -4,21 +4,27 @@ import { getShopDetail, formatCny, formatNumber } from '@/lib/dashboard/queries'
 import { MetricCard } from '@/components/dashboard/metric-card';
 import { TrendChart } from '@/components/dashboard/trend-chart';
 import { CampaignTable } from '@/components/dashboard/campaign-table';
+import { InsightPanel } from '@/components/dashboard/insight-panel';
+import { DateRangePicker } from '@/components/dashboard/date-range-picker';
+import { parseDateRangeParams } from '@/lib/dashboard/date-range';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 interface Props {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ from?: string; to?: string }>;
 }
 
-export default async function ShopDetailPage({ params }: Props) {
+export default async function ShopDetailPage({ params, searchParams }: Props) {
   const { id } = await params;
+  const sp = await searchParams;
+  const { from, to } = parseDateRangeParams(sp, 30);
 
   let detail;
   let loadError: string | null = null;
   try {
-    detail = await getShopDetail(id, 30);
+    detail = await getShopDetail(id, { from, to });
   } catch (err) {
     loadError =
       err instanceof Error
@@ -70,10 +76,11 @@ export default async function ShopDetailPage({ params }: Props) {
                   币种 {detail.shop.currency}
                 </span>
                 <span className="rounded bg-neutral-100 px-2 py-1">
-                  最近 {detail.windowDays} 天 ({detail.startDate} ~ {detail.endDate})
+                  {detail.startDate} ~ {detail.endDate}
                 </span>
               </div>
             </div>
+            <DateRangePicker from={from} to={to} />
           </header>
 
           {/* 指标卡片 */}
@@ -137,11 +144,22 @@ export default async function ShopDetailPage({ params }: Props) {
           </section>
 
           {/* 广告活动列表 */}
-          <section>
+          <section className="mb-8">
             <h2 className="mb-3 text-lg font-semibold">
               广告活动({detail.campaigns.length})
             </h2>
             <CampaignTable campaigns={detail.campaigns} />
+          </section>
+
+          {/* 店铺级 Claude 洞察 */}
+          <section>
+            <InsightPanel
+              scope="shop"
+              shopId={id}
+              from={from}
+              to={to}
+              windowDays={detail.windowDays}
+            />
           </section>
         </>
       )}
