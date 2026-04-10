@@ -3,17 +3,28 @@ import { MetricCard } from '@/components/dashboard/metric-card';
 import { ShopMatrix } from '@/components/dashboard/shop-matrix';
 import { InsightPanel } from '@/components/dashboard/insight-panel';
 import { SyncButton } from '@/components/dashboard/sync-button';
+import {
+  DateRangeTabs,
+  parseDaysParam,
+} from '@/components/dashboard/date-range-tabs';
 
 // 强制动态渲染,每次访问都查最新数据
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-export default async function HomePage() {
+interface HomePageProps {
+  searchParams: Promise<{ days?: string }>;
+}
+
+export default async function HomePage({ searchParams }: HomePageProps) {
+  const params = await searchParams;
+  const days = parseDaysParam(params.days, 7);
+
   let data;
   let loadError: string | null = null;
 
   try {
-    data = await getDashboardData(7);
+    data = await getDashboardData(days);
   } catch (err) {
     if (err instanceof Error) {
       loadError = err.message;
@@ -27,11 +38,11 @@ export default async function HomePage() {
   return (
     <main className="mx-auto max-w-6xl px-6 py-10">
       {/* Header */}
-      <header className="mb-8 flex items-end justify-between">
+      <header className="mb-6 flex items-end justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">欣远广告 Agent</h1>
           <p className="mt-1 text-sm text-neutral-500">
-            TikTok Shop + Shopee 广告数据统一看板 · 最近 {data?.windowDays ?? 7} 天
+            TikTok Shop + Shopee 广告数据统一看板
             {data && (
               <span className="ml-2 text-neutral-400">
                 ({data.startDate} ~ {data.endDate})
@@ -49,6 +60,11 @@ export default async function HomePage() {
           </a>
         </div>
       </header>
+
+      {/* 时间段 Tab */}
+      <div className="mb-6">
+        <DateRangeTabs current={days} basePath="/" />
+      </div>
 
       {/* 错误态 */}
       {loadError && (

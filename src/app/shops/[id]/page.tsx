@@ -4,21 +4,28 @@ import { getShopDetail, formatCny, formatNumber } from '@/lib/dashboard/queries'
 import { MetricCard } from '@/components/dashboard/metric-card';
 import { TrendChart } from '@/components/dashboard/trend-chart';
 import { CampaignTable } from '@/components/dashboard/campaign-table';
+import {
+  DateRangeTabs,
+  parseDaysParam,
+} from '@/components/dashboard/date-range-tabs';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 interface Props {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ days?: string }>;
 }
 
-export default async function ShopDetailPage({ params }: Props) {
+export default async function ShopDetailPage({ params, searchParams }: Props) {
   const { id } = await params;
+  const sp = await searchParams;
+  const days = parseDaysParam(sp.days, 30);
 
   let detail;
   let loadError: string | null = null;
   try {
-    detail = await getShopDetail(id, 30);
+    detail = await getShopDetail(id, days);
   } catch (err) {
     loadError =
       err instanceof Error
@@ -70,10 +77,11 @@ export default async function ShopDetailPage({ params }: Props) {
                   币种 {detail.shop.currency}
                 </span>
                 <span className="rounded bg-neutral-100 px-2 py-1">
-                  最近 {detail.windowDays} 天 ({detail.startDate} ~ {detail.endDate})
+                  {detail.startDate} ~ {detail.endDate}
                 </span>
               </div>
             </div>
+            <DateRangeTabs current={days} basePath={`/shops/${id}`} />
           </header>
 
           {/* 指标卡片 */}
@@ -126,7 +134,7 @@ export default async function ShopDetailPage({ params }: Props) {
           {/* 趋势图 */}
           <section className="mb-8">
             <div className="mb-3 flex items-center justify-between">
-              <h2 className="text-lg font-semibold">趋势({detail.windowDays} 天)</h2>
+              <h2 className="text-lg font-semibold">趋势({days} 天)</h2>
               <div className="text-xs text-neutral-400">
                 柱:花费 / GMV   折线:ROI
               </div>
