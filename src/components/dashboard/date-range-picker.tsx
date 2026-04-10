@@ -13,6 +13,7 @@
 import * as React from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { format, subDays, startOfMonth, endOfMonth, subMonths, isSameDay } from 'date-fns';
+import { zhCN } from 'date-fns/locale';
 import type { DateRange } from 'react-day-picker';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -134,13 +135,38 @@ export function DateRangePicker({ from, to }: DateRangePickerProps) {
         >
           📅 {!activePreset ? rangeLabel : '自定义'}
         </PopoverTrigger>
-        <PopoverContent className="w-auto p-3" align="end">
+        <PopoverContent className="w-auto p-4" align="end" sideOffset={8}>
           <Calendar
             mode="range"
             numberOfMonths={2}
             selected={pending}
             onSelect={setPending}
             defaultMonth={currentFrom}
+            locale={zhCN}
+            weekStartsOn={1}
+            className="[--cell-size:--spacing(9)]"
+            classNames={{
+              months: 'flex flex-col gap-6 md:flex-row md:gap-8',
+              caption_label: 'text-sm font-semibold text-neutral-900',
+              month_caption:
+                'flex h-9 w-full items-center justify-center text-sm font-semibold text-neutral-900',
+              weekday:
+                'h-8 w-9 text-center text-xs font-medium text-neutral-400',
+              day: 'relative h-9 w-9 p-0 text-center text-sm',
+              day_button:
+                'h-9 w-9 rounded-md font-normal text-neutral-700 hover:bg-neutral-100 aria-selected:opacity-100',
+              selected:
+                'bg-neutral-900 text-white hover:bg-neutral-800 focus:bg-neutral-900',
+              range_start:
+                'rounded-l-md bg-neutral-900 text-white [&>button]:bg-neutral-900 [&>button]:text-white',
+              range_end:
+                'rounded-r-md bg-neutral-900 text-white [&>button]:bg-neutral-900 [&>button]:text-white',
+              range_middle:
+                'bg-neutral-100 text-neutral-900 [&>button]:bg-transparent [&>button]:text-neutral-900',
+              today: 'font-semibold underline underline-offset-2',
+              outside: 'text-neutral-300',
+              disabled: 'text-neutral-200',
+            }}
           />
           <div className="mt-3 flex items-center justify-between border-t border-neutral-200 pt-3">
             <div className="text-xs text-neutral-500">
