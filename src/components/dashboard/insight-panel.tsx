@@ -13,6 +13,7 @@
  */
 
 import { useEffect, useState } from 'react';
+import ReactMarkdown from 'react-markdown';
 import { Card, CardContent } from '@/components/ui/card';
 
 interface InsightPanelProps {
@@ -120,9 +121,35 @@ export function InsightPanel({ windowDays }: InsightPanelProps) {
         )}
 
         {!state.loading && !state.error && state.markdown && (
-          <pre className="whitespace-pre-wrap break-words font-sans text-sm leading-relaxed text-neutral-700">
-            {state.markdown}
-          </pre>
+          <div className="prose prose-sm prose-neutral max-w-none text-neutral-700">
+            <ReactMarkdown
+              components={{
+                h1: ({ children }) => (
+                  <h1 className="mb-2 mt-4 text-base font-bold text-neutral-900">{children}</h1>
+                ),
+                h2: ({ children }) => (
+                  <h2 className="mb-2 mt-4 text-base font-bold text-neutral-900">{children}</h2>
+                ),
+                h3: ({ children }) => (
+                  <h3 className="mb-1 mt-3 text-sm font-semibold text-neutral-900">{children}</h3>
+                ),
+                p: ({ children }) => (
+                  <p className="my-1 text-sm leading-relaxed">{children}</p>
+                ),
+                ul: ({ children }) => (
+                  <ul className="my-2 list-disc pl-5 text-sm">{children}</ul>
+                ),
+                li: ({ children }) => (
+                  <li className="my-0.5 leading-relaxed">{children}</li>
+                ),
+                strong: ({ children }) => (
+                  <strong className="font-semibold text-neutral-900">{children}</strong>
+                ),
+              }}
+            >
+              {state.markdown}
+            </ReactMarkdown>
+          </div>
         )}
       </CardContent>
     </Card>
