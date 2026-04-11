@@ -3,6 +3,7 @@ import { MetricCard } from '@/components/dashboard/metric-card';
 import { ShopMatrix } from '@/components/dashboard/shop-matrix';
 import { InsightPanel } from '@/components/dashboard/insight-panel';
 import { SyncButton } from '@/components/dashboard/sync-button';
+import { ImportButton } from '@/components/dashboard/import-button';
 import { DateRangePicker } from '@/components/dashboard/date-range-picker';
 import { parseDateRangeParams } from '@/lib/dashboard/date-range';
 
@@ -49,6 +50,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
           </p>
         </div>
         <div className="flex items-center gap-3">
+          <ImportButton />
           <SyncButton lastSyncedAt={data?.lastSyncedAt ?? null} />
           <a
             href="/api/auth/tiktok/authorize"
