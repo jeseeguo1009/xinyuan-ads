@@ -23,8 +23,8 @@ export interface DailyReportInputs {
 }
 
 export interface DailySnapshot {
-  spendCny: number;
-  gmvCny: number;
+  spend: number;
+  gmv: number;
   orders: number;
   roi: number;
   impressions: number;
@@ -36,8 +36,8 @@ export interface ShopSnapshot {
   country: string;
   flag: string;
   operatorCode: string;
-  spendCny: number;
-  gmvCny: number;
+  spend: number;
+  gmv: number;
   orders: number;
   roi: number;
   /** 相对前一日 ROI 变化,百分比 */
@@ -70,30 +70,30 @@ export function buildDailyReportPrompt(inputs: DailyReportInputs): string {
   return `基于以下数据撰写 ${reportDate} 的运营日报:
 
 ## 昨日总览(${reportDate})
-- 总花费: ¥${yesterday.spendCny.toLocaleString('zh-CN')}
-- 总 GMV: ¥${yesterday.gmvCny.toLocaleString('zh-CN')}
-- 订单数: ${yesterday.orders.toLocaleString('zh-CN')}
+- 总花费: $${yesterday.spend.toFixed(2)}
+- 总 GMV: $${yesterday.gmv.toFixed(2)}
+- 订单数: ${yesterday.orders}
 - ROI: ${yesterday.roi.toFixed(2)}
-- 曝光: ${yesterday.impressions.toLocaleString('zh-CN')}
-- 点击: ${yesterday.clicks.toLocaleString('zh-CN')}
+- 曝光: ${yesterday.impressions.toLocaleString('en-US')}
+- 点击: ${yesterday.clicks.toLocaleString('en-US')}
 - CTR: ${(yesterday.ctr * 100).toFixed(2)}%
 
 ## 环比(前日)
-- 花费环比: ${pctChange(yesterday.spendCny, dayBefore.spendCny)}
-- GMV 环比: ${pctChange(yesterday.gmvCny, dayBefore.gmvCny)}
+- 花费环比: ${pctChange(yesterday.spend, dayBefore.spend)}
+- GMV 环比: ${pctChange(yesterday.gmv, dayBefore.gmv)}
 - ROI 环比: ${pctChange(yesterday.roi, dayBefore.roi)}
 - 订单环比: ${pctChange(yesterday.orders, dayBefore.orders)}
 
 ## 同比(上周同期)
-- 花费同比: ${pctChange(yesterday.spendCny, lastWeek.spendCny)}
-- GMV 同比: ${pctChange(yesterday.gmvCny, lastWeek.gmvCny)}
+- 花费同比: ${pctChange(yesterday.spend, lastWeek.spend)}
+- GMV 同比: ${pctChange(yesterday.gmv, lastWeek.gmv)}
 - ROI 同比: ${pctChange(yesterday.roi, lastWeek.roi)}
 
 ## 分店铺明细
 ${shopBreakdown
   .map(
     (s) =>
-      `- ${s.flag} ${s.country}(${s.operatorCode}): 花费 ¥${s.spendCny.toLocaleString('zh-CN')}, GMV ¥${s.gmvCny.toLocaleString('zh-CN')}, ROI ${s.roi.toFixed(2)}(${pctChange(s.roi, s.roi / (1 + s.roiDeltaPct / 100))}), 订单 ${s.orders}`
+      `- ${s.flag} ${s.country}(${s.operatorCode}): 花费 $${s.spend.toFixed(2)}, GMV $${s.gmv.toFixed(2)}, ROI ${s.roi.toFixed(2)}(${pctChange(s.roi, s.roi / (1 + s.roiDeltaPct / 100))}), 订单 ${s.orders}`
   )
   .join('\n')}
 

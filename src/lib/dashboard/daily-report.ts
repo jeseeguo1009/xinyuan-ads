@@ -46,14 +46,14 @@ async function aggregateDay(date: string): Promise<DailySnapshot> {
   const { data, error } = await supabase
     .schema('ads')
     .from('daily_metrics')
-    .select('spend_cny, gmv_cny, orders, impressions, clicks')
+    .select('spend_local, gmv_local, orders, impressions, clicks')
     .eq('stat_date', date);
   if (error) throw error;
 
   const totals = (data ?? []).reduce(
     (acc, m) => ({
-      spend: acc.spend + Number(m.spend_cny),
-      gmv: acc.gmv + Number(m.gmv_cny),
+      spend: acc.spend + Number(m.spend_local),
+      gmv: acc.gmv + Number(m.gmv_local),
       orders: acc.orders + m.orders,
       imp: acc.imp + Number(m.impressions),
       clk: acc.clk + Number(m.clicks),
@@ -62,8 +62,8 @@ async function aggregateDay(date: string): Promise<DailySnapshot> {
   );
 
   return {
-    spendCny: +totals.spend.toFixed(2),
-    gmvCny: +totals.gmv.toFixed(2),
+    spend: +totals.spend.toFixed(2),
+    gmv: +totals.gmv.toFixed(2),
     orders: totals.orders,
     impressions: totals.imp,
     clicks: totals.clk,
@@ -89,7 +89,7 @@ async function aggregateShopsForDate(
   const { data: metrics, error: mErr } = await supabase
     .schema('ads')
     .from('daily_metrics')
-    .select('account_id, stat_date, spend_cny, gmv_cny, orders')
+    .select('account_id, stat_date, spend_local, gmv_local, orders')
     .in('stat_date', [date, prevDate]);
   if (mErr) throw mErr;
 
@@ -103,8 +103,8 @@ async function aggregateShopsForDate(
     for (const m of metrics ?? []) {
       if (m.account_id !== acc.id) continue;
       const target = m.stat_date === date ? agg : prevAgg;
-      target.spend += Number(m.spend_cny);
-      target.gmv += Number(m.gmv_cny);
+      target.spend += Number(m.spend_local);
+      target.gmv += Number(m.gmv_local);
       target.orders += m.orders;
     }
 
@@ -116,8 +116,8 @@ async function aggregateShopsForDate(
       country: info.country,
       flag: info.flag,
       operatorCode: acc.operator_code ?? '-',
-      spendCny: +agg.spend.toFixed(2),
-      gmvCny: +agg.gmv.toFixed(2),
+      spend: +agg.spend.toFixed(2),
+      gmv: +agg.gmv.toFixed(2),
       orders: agg.orders,
       roi: +roi.toFixed(2),
       roiDeltaPct: +delta.toFixed(1),

@@ -10,7 +10,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { formatCny, formatNumber, type CampaignRow } from '@/lib/dashboard/queries';
+import { formatUsd, formatNumber, type CampaignRow } from '@/lib/dashboard/queries';
 
 interface CampaignTableProps {
   campaigns: CampaignRow[];
@@ -75,10 +75,10 @@ export function CampaignTable({ campaigns }: CampaignTableProps) {
                   <Badge variant={status.variant}>{status.text}</Badge>
                 </TableCell>
                 <TableCell className="text-right tabular-nums">
-                  {formatCny(c.spendCny)}
+                  {formatUsd(c.spend)}
                 </TableCell>
                 <TableCell className="text-right tabular-nums">
-                  {formatCny(c.gmvCny)}
+                  {formatUsd(c.gmv)}
                 </TableCell>
                 <TableCell className="text-right tabular-nums">
                   {formatNumber(c.orders)}

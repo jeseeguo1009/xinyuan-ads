@@ -39,7 +39,7 @@ export function TrendChart({ data }: TrendChartProps) {
             tick={{ fontSize: 12 }}
             stroke="#888"
             tickFormatter={(v) =>
-              v >= 10000 ? `${(v / 10000).toFixed(1)}万` : `${v}`
+              v >= 1000 ? `$${(v / 1000).toFixed(1)}k` : `$${v}`
             }
           />
           <YAxis
@@ -63,7 +63,7 @@ export function TrendChart({ data }: TrendChartProps) {
               if (name === 'ROI') return [num.toFixed(2), 'ROI'];
               if (name === '花费占比') return [`${num.toFixed(1)}%`, '花费占比'];
               return [
-                `¥${num.toLocaleString('zh-CN', { maximumFractionDigits: 0 })}`,
+                `$${num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
                 name,
               ];
             }}
@@ -71,14 +71,14 @@ export function TrendChart({ data }: TrendChartProps) {
           <Legend wrapperStyle={{ fontSize: 12 }} />
           <Bar
             yAxisId="left"
-            dataKey="spendCny"
+            dataKey="spend"
             name="花费"
             fill="#f87171"
             radius={[4, 4, 0, 0]}
           />
           <Bar
             yAxisId="left"
-            dataKey="gmvCny"
+            dataKey="gmv"
             name="GMV"
             fill="#34d399"
             radius={[4, 4, 0, 0]}
