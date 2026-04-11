@@ -61,20 +61,20 @@ export async function generateShopInsight(
     : 0;
 
   // 找 Top 3 和 Bottom 3 活动
-  const enabled = campaigns.filter((c) => c.status === 'enabled' && c.spendCny > 0);
+  const enabled = campaigns.filter((c) => c.status === 'enabled' && c.spend > 0);
   const topByRoi = [...enabled].sort((a, b) => b.roi - a.roi).slice(0, 3);
   const bottomByRoi = [...enabled].sort((a, b) => a.roi - b.roi).slice(0, 3);
 
   // 花费但 ROI < 1 的活动(亏钱)
-  const losing = enabled.filter((c) => c.roi < 1).sort((a, b) => b.spendCny - a.spendCny);
+  const losing = enabled.filter((c) => c.roi < 1).sort((a, b) => b.spend - a.spend);
 
   const prompt = `基于以下 ${shop.flag} ${shop.country} 店铺(${shop.accountName})最近 ${windowDays} 天(${startDate} ~ ${endDate})的数据,给出分析:
 
 ## 店铺总览
-- 花费: ¥${shop.spendCny.toLocaleString('zh-CN')}
-- GMV: ¥${shop.gmvCny.toLocaleString('zh-CN')}
+- 花费: $${shop.spend.toFixed(2)}
+- GMV: $${shop.gmv.toFixed(2)}
 - ROI: ${shop.roi.toFixed(2)}
-- 花费占比: ${shop.gmvCny > 0 ? ((shop.spendCny / shop.gmvCny) * 100).toFixed(1) : '-'}%
+- 花费占比: ${shop.gmv > 0 ? ((shop.spend / shop.gmv) * 100).toFixed(1) : '-'}%
 - 订单: ${shop.orders}
 - CTR: ${(shop.ctr * 100).toFixed(2)}%
 - 活动数: ${campaigns.length}(运行中 ${enabled.length})
@@ -85,13 +85,13 @@ export async function generateShopInsight(
 - 变化: ${roiTrend >= 0 ? '+' : ''}${roiTrend.toFixed(1)}%
 
 ## Top 3 高 ROI 活动
-${topByRoi.map((c, i) => `${i + 1}. ${c.name}: 花费 ¥${c.spendCny.toFixed(0)}, GMV ¥${c.gmvCny.toFixed(0)}, ROI ${c.roi.toFixed(2)}`).join('\n') || '(无)'}
+${topByRoi.map((c, i) => `${i + 1}. ${c.name}: 花费 $${c.spend.toFixed(2)}, GMV $${c.gmv.toFixed(2)}, ROI ${c.roi.toFixed(2)}`).join('\n') || '(无)'}
 
 ## Bottom 3 低 ROI 活动
-${bottomByRoi.map((c, i) => `${i + 1}. ${c.name}: 花费 ¥${c.spendCny.toFixed(0)}, GMV ¥${c.gmvCny.toFixed(0)}, ROI ${c.roi.toFixed(2)}`).join('\n') || '(无)'}
+${bottomByRoi.map((c, i) => `${i + 1}. ${c.name}: 花费 $${c.spend.toFixed(2)}, GMV $${c.gmv.toFixed(2)}, ROI ${c.roi.toFixed(2)}`).join('\n') || '(无)'}
 
 ## 亏损活动(ROI < 1)
-${losing.length > 0 ? losing.slice(0, 5).map((c) => `- ${c.name}: 花费 ¥${c.spendCny.toFixed(0)}, ROI ${c.roi.toFixed(2)}`).join('\n') : '无'}
+${losing.length > 0 ? losing.slice(0, 5).map((c) => `- ${c.name}: 花费 $${c.spend.toFixed(2)}, ROI ${c.roi.toFixed(2)}`).join('\n') : '无'}
 
 ## 输出要求
 请以下列 Markdown 结构输出:

@@ -1,8 +1,9 @@
-import { getDashboardData, formatCny, formatNumber } from '@/lib/dashboard/queries';
+import { getDashboardData, formatUsd, formatNumber } from '@/lib/dashboard/queries';
 import { MetricCard } from '@/components/dashboard/metric-card';
 import { ShopMatrix } from '@/components/dashboard/shop-matrix';
 import { InsightPanel } from '@/components/dashboard/insight-panel';
 import { SyncButton } from '@/components/dashboard/sync-button';
+import { ImportButton } from '@/components/dashboard/import-button';
 import { DateRangePicker } from '@/components/dashboard/date-range-picker';
 import { parseDateRangeParams } from '@/lib/dashboard/date-range';
 
@@ -49,6 +50,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
           </p>
         </div>
         <div className="flex items-center gap-3">
+          <ImportButton />
           <SyncButton lastSyncedAt={data?.lastSyncedAt ?? null} />
           <a
             href="/api/auth/tiktok/authorize"
@@ -79,12 +81,12 @@ export default async function HomePage({ searchParams }: HomePageProps) {
             <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
               <MetricCard
                 title="总花费"
-                value={formatCny(data.totals.spendCny)}
+                value={formatUsd(data.totals.spend)}
                 subtitle="累计广告投入"
               />
               <MetricCard
                 title="总 GMV"
-                value={formatCny(data.totals.gmvCny)}
+                value={formatUsd(data.totals.gmv)}
                 subtitle="累计销售额"
               />
               <MetricCard
@@ -102,16 +104,16 @@ export default async function HomePage({ searchParams }: HomePageProps) {
               <MetricCard
                 title="花费占比"
                 value={
-                  data.totals.gmvCny > 0
-                    ? `${((data.totals.spendCny / data.totals.gmvCny) * 100).toFixed(1)}%`
+                  data.totals.gmv > 0
+                    ? `${((data.totals.spend / data.totals.gmv) * 100).toFixed(1)}%`
                     : '-'
                 }
                 subtitle="花费 / GMV"
                 accent={
-                  data.totals.gmvCny > 0
-                    ? data.totals.spendCny / data.totals.gmvCny < 0.5
+                  data.totals.gmv > 0
+                    ? data.totals.spend / data.totals.gmv < 0.5
                       ? 'success'
-                      : data.totals.spendCny / data.totals.gmvCny < 1
+                      : data.totals.spend / data.totals.gmv < 1
                         ? 'warning'
                         : 'danger'
                     : 'default'

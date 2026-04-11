@@ -5,7 +5,7 @@
  */
 import Link from 'next/link';
 import { Card, CardContent } from '@/components/ui/card';
-import { formatCny, formatNumber, type ShopSummary } from '@/lib/dashboard/queries';
+import { formatUsd, formatNumber, type ShopSummary } from '@/lib/dashboard/queries';
 
 interface ShopMatrixProps {
   shops: ShopSummary[];
@@ -58,13 +58,13 @@ export function ShopMatrix({ shops }: ShopMatrixProps) {
                 <div>
                   <div className="text-xs text-neutral-500">花费</div>
                   <div className="mt-0.5 text-base font-semibold text-neutral-900">
-                    {formatCny(shop.spendCny)}
+                    {formatUsd(shop.spend)}
                   </div>
                 </div>
                 <div>
                   <div className="text-xs text-neutral-500">GMV</div>
                   <div className="mt-0.5 text-base font-semibold text-neutral-900">
-                    {formatCny(shop.gmvCny)}
+                    {formatUsd(shop.gmv)}
                   </div>
                 </div>
                 <div>

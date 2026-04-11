@@ -13,9 +13,9 @@ export interface ShopSummary {
   accountName: string;
   currency: string;
   isActive: boolean;
-  // 指标(窗口内聚合)
-  spendCny: number;
-  gmvCny: number;
+  // 指标(窗口内聚合,原始货币 USD)
+  spend: number;
+  gmv: number;
   orders: number;
   impressions: number;
   clicks: number;
@@ -28,8 +28,8 @@ export interface DashboardData {
   startDate: string;
   endDate: string;
   totals: {
-    spendCny: number;
-    gmvCny: number;
+    spend: number;
+    gmv: number;
     orders: number;
     roi: number;
   };
@@ -94,7 +94,7 @@ export async function getDashboardData(
       windowDays,
       startDate: startDateStr,
       endDate: endDateStr,
-      totals: { spendCny: 0, gmvCny: 0, orders: 0, roi: 0 },
+      totals: { spend: 0, gmv: 0, orders: 0, roi: 0 },
       shops: [],
       lastSyncedAt: null,
     };
@@ -104,7 +104,7 @@ export async function getDashboardData(
   const { data: metrics, error: metricsErr } = await supabase
     .schema('ads')
     .from('daily_metrics')
-    .select('account_id, spend_cny, gmv_cny, orders, impressions, clicks')
+    .select('account_id, spend_local, gmv_local, orders, impressions, clicks')
     .gte('stat_date', startDateStr)
     .lte('stat_date', endDateStr);
 
@@ -123,8 +123,8 @@ export async function getDashboardData(
       imp: 0,
       clk: 0,
     };
-    acc.spend += Number(m.spend_cny);
-    acc.gmv += Number(m.gmv_cny);
+    acc.spend += Number(m.spend_local);
+    acc.gmv += Number(m.gmv_local);
     acc.orders += m.orders;
     acc.imp += Number(m.impressions);
     acc.clk += Number(m.clicks);
@@ -149,8 +149,8 @@ export async function getDashboardData(
       accountName: acc.account_name,
       currency: acc.currency,
       isActive: acc.is_active,
-      spendCny: +agg.spend.toFixed(2),
-      gmvCny: +agg.gmv.toFixed(2),
+      spend: +agg.spend.toFixed(2),
+      gmv: +agg.gmv.toFixed(2),
       orders: agg.orders,
       impressions: agg.imp,
       clicks: agg.clk,
@@ -160,8 +160,8 @@ export async function getDashboardData(
   });
 
   // 5. 总计
-  const totalSpend = shops.reduce((s, x) => s + x.spendCny, 0);
-  const totalGmv = shops.reduce((s, x) => s + x.gmvCny, 0);
+  const totalSpend = shops.reduce((s, x) => s + x.spend, 0);
+  const totalGmv = shops.reduce((s, x) => s + x.gmv, 0);
   const totalOrders = shops.reduce((s, x) => s + x.orders, 0);
 
   // 查最近一次成功的同步
@@ -179,8 +179,8 @@ export async function getDashboardData(
     startDate: startDateStr,
     endDate: endDateStr,
     totals: {
-      spendCny: +totalSpend.toFixed(2),
-      gmvCny: +totalGmv.toFixed(2),
+      spend: +totalSpend.toFixed(2),
+      gmv: +totalGmv.toFixed(2),
       orders: totalOrders,
       roi: totalSpend > 0 ? +(totalGmv / totalSpend).toFixed(2) : 0,
     },
@@ -195,8 +195,8 @@ export async function getDashboardData(
 
 export interface DailyPoint {
   date: string; // yyyy-MM-dd
-  spendCny: number;
-  gmvCny: number;
+  spend: number;
+  gmv: number;
   orders: number;
   roi: number;
   spendRatio: number; // 花费占比 = spend / gmv × 100,%
@@ -207,8 +207,8 @@ export interface CampaignRow {
   name: string;
   status: string;
   objective: string | null;
-  spendCny: number;
-  gmvCny: number;
+  spend: number;
+  gmv: number;
   orders: number;
   roi: number;
 }
@@ -265,7 +265,7 @@ export async function getShopDetail(
   const { data: metrics, error: mErr } = await supabase
     .schema('ads')
     .from('daily_metrics')
-    .select('stat_date, spend_cny, gmv_cny, orders, impressions, clicks, ad_id')
+    .select('stat_date, spend_local, gmv_local, orders, impressions, clicks, ad_id')
     .eq('account_id', shopId)
     .gte('stat_date', startDateStr)
     .lte('stat_date', endDateStr)
@@ -285,8 +285,8 @@ export async function getShopDetail(
       imp: 0,
       clk: 0,
     };
-    bucket.spend += Number(m.spend_cny);
-    bucket.gmv += Number(m.gmv_cny);
+    bucket.spend += Number(m.spend_local);
+    bucket.gmv += Number(m.gmv_local);
     bucket.orders += m.orders;
     bucket.imp += Number(m.impressions);
     bucket.clk += Number(m.clicks);
@@ -297,16 +297,16 @@ export async function getShopDetail(
     .sort(([a], [b]) => (a < b ? -1 : 1))
     .map(([date, v]) => ({
       date,
-      spendCny: +v.spend.toFixed(2),
-      gmvCny: +v.gmv.toFixed(2),
+      spend: +v.spend.toFixed(2),
+      gmv: +v.gmv.toFixed(2),
       orders: v.orders,
       roi: v.spend > 0 ? +(v.gmv / v.spend).toFixed(2) : 0,
       spendRatio: v.gmv > 0 ? +((v.spend / v.gmv) * 100).toFixed(2) : 0,
     }));
 
   // 4. 店铺窗口汇总(复用 ShopSummary 结构)
-  const totalSpend = dailySeries.reduce((s, d) => s + d.spendCny, 0);
-  const totalGmv = dailySeries.reduce((s, d) => s + d.gmvCny, 0);
+  const totalSpend = dailySeries.reduce((s, d) => s + d.spend, 0);
+  const totalGmv = dailySeries.reduce((s, d) => s + d.gmv, 0);
   const totalOrders = dailySeries.reduce((s, d) => s + d.orders, 0);
   const totalImp = (metrics ?? []).reduce(
     (s, m) => s + Number(m.impressions),
@@ -322,8 +322,8 @@ export async function getShopDetail(
     accountName: acc.account_name,
     currency: acc.currency,
     isActive: acc.is_active,
-    spendCny: +totalSpend.toFixed(2),
-    gmvCny: +totalGmv.toFixed(2),
+    spend: +totalSpend.toFixed(2),
+    gmv: +totalGmv.toFixed(2),
     orders: totalOrders,
     impressions: totalImp,
     clicks: totalClk,
@@ -372,8 +372,8 @@ export async function getShopDetail(
     const campId = adToCamp.get(m.ad_id);
     if (!campId) continue;
     const b = byCamp.get(campId) ?? { spend: 0, gmv: 0, orders: 0 };
-    b.spend += Number(m.spend_cny);
-    b.gmv += Number(m.gmv_cny);
+    b.spend += Number(m.spend_local);
+    b.gmv += Number(m.gmv_local);
     b.orders += m.orders;
     byCamp.set(campId, b);
   }
@@ -386,13 +386,13 @@ export async function getShopDetail(
         name: c.campaign_name,
         status: c.status,
         objective: c.objective,
-        spendCny: +agg.spend.toFixed(2),
-        gmvCny: +agg.gmv.toFixed(2),
+        spend: +agg.spend.toFixed(2),
+        gmv: +agg.gmv.toFixed(2),
         orders: agg.orders,
         roi: agg.spend > 0 ? +(agg.gmv / agg.spend).toFixed(2) : 0,
       };
     })
-    .sort((a, b) => b.spendCny - a.spendCny);
+    .sort((a, b) => b.spend - a.spend);
 
   return {
     shop,
@@ -404,12 +404,12 @@ export async function getShopDetail(
   };
 }
 
-/** 金额格式化:¥12,345 */
-export function formatCny(value: number): string {
+/** 金额格式化:$12,345 */
+export function formatUsd(value: number): string {
   if (value >= 10000) {
-    return `¥${(value / 10000).toFixed(1)}万`;
+    return `$${(value / 1000).toFixed(1)}k`;
   }
-  return `¥${value.toLocaleString('zh-CN', { maximumFractionDigits: 0 })}`;
+  return `$${value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
 /** 数字格式化:1,234 */
